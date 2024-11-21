@@ -3,6 +3,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PararellController;
+use App\Http\Controllers\SynthesizeBatchController;
+use App\Http\Controllers\SynthesizeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,3 +22,6 @@ Route::get('/user', function () {
 });
 
 Route::post('/paralell', [PararellController::class, 'paralell']);
+
+Route::post('/batch/synthesize', SynthesizeBatchController::class)->name('synthesize.batch');
+Route::post('/synthesize', SynthesizeController::class)->name('synthesize.single');

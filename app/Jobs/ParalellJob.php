@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Http\Repositories\PararellRepository;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -25,10 +26,10 @@ class ParalellJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(): void
+    public function handle(PararellRepository $pararellRepository): void
     {
         //1000 peticiones de 7segs en 20 works se procesan en 5min 52secs sin afectaciones considerables de ram y cpu
-        Log::info("Procesando texto: " . $this->text);
-        sleep(7);
+        $pararellRepository->snedGretings($this->text);
+        sleep(0.5);
     }
 }
