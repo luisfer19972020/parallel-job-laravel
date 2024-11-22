@@ -5,7 +5,7 @@ namespace App\Jobs;
 use App\Services\Tts\TtsService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
@@ -18,9 +18,9 @@ class SynthesizeBatchJob implements ShouldQueue
     /**
      * Create a new job instance.
      *
-     * @param  array<string>  $texts
+     * @param  Collection<string,string>  $texts
      */
-    public function __construct(private array $texts, private string $voice)
+    public function __construct(private Collection $texts, private string $voice)
     {
         $this->texts = $texts;
         $this->voice = $voice;
@@ -34,7 +34,6 @@ class SynthesizeBatchJob implements ShouldQueue
         $texts = $this->texts;
 
         $chunk_size  = 5;
-        $texts       = new Collection($texts);
         $text_chunks = $texts->chunk($chunk_size);
 
         $voice = $this->voice;
@@ -49,15 +48,16 @@ class SynthesizeBatchJob implements ShouldQueue
         });
     }
 
+    
     /**
-     * @param  Collection<int, string>  $items  A collection of text items for synthesis.
+     * @param  Collection<string, string>  $items  A collection of text items for synthesis.
      * @return array<int, callable> An array of callables that execute the TTS process.
      */
     private function createBatchRun(Collection $items, string $voice): array
     {
-        $batch_run = $items->map(function ($text) use ($voice) {
-            return function () use ($text, $voice) {
-                $result = (new TtsService)->getAudio($text, $voice);
+        $batch_run = $items->map(function ($text,$hash) use ($voice) {
+            return function () use ($text, $hash, $voice) {
+                $result = (new TtsService)->getAudio($text,$hash,$voice);
 
                 if (! $result)
                 {
@@ -70,4 +70,5 @@ class SynthesizeBatchJob implements ShouldQueue
 
         return $batch_run->toArray();
     }
+    
 }

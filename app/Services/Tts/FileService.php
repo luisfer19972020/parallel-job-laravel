@@ -14,7 +14,7 @@ class FileService implements IFileService
 
     public function __construct()
     {
-        $this->storageDisk = config('tts.storage_disk');
+        $this->storageDisk = 'local';
     }
 
     public function getAudioWavDurationInMileSeconds(string $fileData): string|float

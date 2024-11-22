@@ -17,7 +17,7 @@ class TtsService
 
     public function __construct()
     {
-        $this->storageDisk = config('tts.storage_disk');
+        $this->storageDisk = 'local';
     }
 
     /**
@@ -51,7 +51,7 @@ class TtsService
         return app($providerClass);
     }
 
-    public function getAudio(string $text, string $voice): false|string
+    public function getAudio(string $text,string $hash, string $voice): false|string
     {
         if (empty($text) || empty($voice))
         {
@@ -60,12 +60,7 @@ class TtsService
             return false;
         }
 
-        $hash = $this->generateHash($text, $voice);
 
-        $tts = Tts::where('hash', $hash)->first();
-
-        if (! $tts || $tts->state !== TtsState::OK)
-        {
             $lockKey = "tts_creation_lock_{$hash}";
             $lock    = Cache::lock($lockKey, 30);
 
@@ -78,7 +73,7 @@ class TtsService
 
                     if (! $tts || $tts->state !== TtsState::OK)
                     {
-                        if (! $this->createAudio($text, $voice))
+                        if (! $this->createAudio($text,$hash,$voice))
                         {
                             logs()->error("Failed to create audio. {$hash}");
 
@@ -105,13 +100,13 @@ class TtsService
 
                 return false;
             }
-        }
+     
 
         if (! Storage::disk($this->storageDisk)->exists($tts->full_filename))
         {
             logs()->warning("File missing in storage: {$tts->full_filename}");
 
-            if (! $this->createAudio($text, $voice))
+            if (! $this->createAudio($text, $hash,$voice))
             {
                 return false;
             }
@@ -134,7 +129,7 @@ class TtsService
     {
         try
         {
-            return Storage::disk($this->storageDisk)->get($tts->full_filename);
+            return 'SUJEFGIUWNESFG';
         } catch (\Exception $e)
         {
             logs()->error("Failed to retrieve audio file: {$e->getMessage()}", ['filename' => $tts->full_filename]);
@@ -143,11 +138,10 @@ class TtsService
         }
     }
 
-    public function createAudio(string $text, string $voice): bool
+    public function createAudio(string $text,string $hash ,string $voice): bool
     {
         $provider  = $this->getTtsProvider($voice);
         $extension = $provider->getFileExtension();
-        $hash      = $this->generateHash($text, $voice);
 
         $tts        = $this->initializeTtsRecord($hash, $text, $voice);
         $time_start = microtime(true);
@@ -180,7 +174,7 @@ class TtsService
         return $this->finalizeTtsRecord($tts);
     }
 
-    private function generateHash(string $text, string $voice): string
+    public function generateHash(string $text, string $voice): string
     {
         return hash('sha256', $text.$voice);
     }
@@ -240,6 +234,7 @@ class TtsService
         {
             //Simulo la duracion
             $duration_ms = 10000;
+            $fileSize = 10000;
             $tts->update(['state' => TtsState::OK, 'state_datetime' => now(), 'duration_ms' => $duration_ms, 'file_size_kb' => $fileSize]);
             logs()->info("Audio file created and uploaded: {$tts->full_filename}");
 

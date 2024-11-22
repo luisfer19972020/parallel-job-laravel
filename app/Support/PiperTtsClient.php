@@ -17,7 +17,8 @@ class PiperTtsClient
      */
     public function synthesize(string $text, string $model): array
     {
-        sleep(7);
+        logs()->info("hace peticio http");
+        sleep(3);
        return [
         'status'=>'ok',
         'data'=>[
